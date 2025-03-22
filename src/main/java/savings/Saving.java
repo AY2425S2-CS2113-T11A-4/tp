@@ -57,6 +57,7 @@ public class Saving {
      * @param amount The amount to save.
      */
     public void addSavings(double amount) throws BudgetTrackerException {
+        double balance = summary.getTotalBalance();
         savingsRecords.add(new SavingsRecord(amount));
         System.out.println("Sure! I have added your savings:");
         System.out.println((savingsRecords.size()) + ". \t" + savingsRecords.get(savingsRecords.size() - 1));
@@ -149,6 +150,51 @@ public class Saving {
     }
 
     /**
+     * Transfers a specified amount from one savings record to another.
+     * @param fromIndex The index of the savings record to transfer from.
+     * @param toIndex The index of the savings record to transfer to.
+     * @param amount The amount to transfer.
+     */
+    public void transferSavings(int fromIndex, int toIndex, double amount) {
+        fromIndex -= 1;
+        toIndex -= 1;
+
+        // Check for valid indices
+        if (fromIndex < 0 || fromIndex >= savingsRecords.size() ||
+                toIndex < 0 || toIndex >= savingsRecords.size()) {
+            System.out.println("Invalid index.");
+            return;
+        }
+
+        // Prevent transferring to the same record
+        if (fromIndex == toIndex) {
+            System.out.println("Cannot transfer to the same savings record.");
+            return;
+        }
+
+        // Get the savings records at the provided indices
+        SavingsRecord fromRecord = savingsRecords.get(fromIndex);
+        SavingsRecord toRecord = savingsRecords.get(toIndex);
+
+        // Check if there are enough funds in the source record
+        if (fromRecord.amount < amount) {
+            System.out.println("Insufficient funds in the source savings.");
+            return;
+        }
+
+        // Perform the transfer
+        fromRecord.amount -= amount;
+        toRecord.amount += amount;
+
+        // Output the result
+        System.out.println("Transferred " + amount + " from savings " + (fromIndex + 1) +
+                " to savings " + (toIndex + 1) + ".");
+        System.out.println("Updated records:");
+        System.out.println((fromIndex + 1) + ". \t" + fromRecord);
+        System.out.println((toIndex + 1) + ". \t" + toRecord);
+    }
+
+    /**
      * Runs the savings management system, processing user commands.
      * @param input The Scanner object for user input.
      */
@@ -202,7 +248,17 @@ public class Saving {
             } catch (NumberFormatException | ArrayIndexOutOfBoundsException e) {
                 System.out.println("Invalid index format.");
             }
-        }  else if (input.contains("exit savings")) {
+        }  else if (input.contains("transfer savings")) {
+            try {
+                String[] partsTransfer = input.substring(17).split(" ");
+                int fromIndex = Integer.parseInt(partsTransfer[0]);
+                int toIndex = Integer.parseInt(partsTransfer[1]);
+                double amount = Double.parseDouble(partsTransfer[2]);
+                transferSavings(fromIndex, toIndex, amount);
+            } catch (Exception e) {
+                System.out.println("Invalid format. Use: transfer savings <FROM_INDEX> <TO_INDEX> <AMOUNT>");
+            }
+        } else if (input.contains("exit savings")) {
             System.out.println("Exited savings function.");
         } else if (input.contains("view savings") || input.contains("savings goal view")) {
             viewSavings();

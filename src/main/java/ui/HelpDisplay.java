@@ -57,6 +57,7 @@ public class HelpDisplay {
                 , "Updates an existing savings goal.");
         addCommandHelp("savings goal delete <INDEX>", "Deletes a savings goal by index.");
         addCommandHelp("exit savings", "exited savings function");
+        addCommandHelp("transfer savings <FROM_INDEX> <TO_INDEX> <AMOUNT>", "transfers a specified amount from one savings record to another.");
 
         addCategory(GENERAL_HEADING);
         addCommandHelp("help", "Displays this help message.");
