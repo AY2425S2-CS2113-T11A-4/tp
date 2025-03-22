@@ -15,24 +15,58 @@ import expenses.BudgetTracker;
 import expenses.ExpenseParser;
 import expenses.ExpenseList;
 import savings.Saving;
+import alerts.FundsAlert;
+import alerts.AlertParser;
 import java.util.Scanner;
 
 public class Duke {
+    private final Scanner in;
+    private final Summary summary;
+    private final SummaryDisplay summaryDisplay;
+    private final HelpDisplay helpDisplay;
+    private final Ui ui;
+    private final BudgetTracker tracker;
+    private final ExpenseList expenseList;
+    private final Saving saving;
+    private final FundsAlert fundsAlert;
+    
+    /**
+     * Constructs a new Duke application with all necessary components initialized.
+     */
+    public Duke() {
+        in = new Scanner(System.in);
+        summary = new Summary();
+        summaryDisplay = new SummaryDisplay(summary);
+        helpDisplay = new HelpDisplay();
+        ui = new Ui();
+        tracker = new BudgetTracker();
+        expenseList = new ExpenseList();
+        saving = new Saving(summary);
+        fundsAlert = new FundsAlert(ui);
+        summary.registerObserver(fundsAlert);
+    }
+    
     /**
      * Main entry-point for the java.duke.Duke application.
      */
     public static void main(String[] args) {
         displayWelcomeMessage();
-
-        // Initialize components
-        Scanner in = new Scanner(System.in);
-        Summary summary = new Summary();
-        SummaryDisplay summaryDisplay = new SummaryDisplay(summary);
-        HelpDisplay helpDisplay = new HelpDisplay();
-        Ui ui = new Ui();
-        BudgetTracker tracker = new BudgetTracker();
-        ExpenseList expenseList = new ExpenseList();
-        Saving saving = new Saving(summary);
+        new Duke().runDuke();
+    }
+    
+    /**
+     * Displays the welcome message for the application.
+     */
+    private static void displayWelcomeMessage() {
+        System.out.println("Welcome to Common Cents!");
+        System.out.println("Use `help` to see available commands.");
+    }
+    
+    /**
+     * Runs the main program loop, processing user commands until exit.
+     */
+    public void runDuke() {
+        fundsAlert.displayInitialNotification();
 
         // Main program loop
         while (true) {
@@ -50,7 +84,7 @@ public class Duke {
 
                 // Handle help command
                 if (fullCommand.equals("help")) {
-                    helpDisplay.displayHelp();
+                    helpDisplay.display();
                     commandRecognized = true;
                     continue;
                 }
@@ -77,6 +111,20 @@ public class Duke {
                     summaryDisplay.displaySummary();
                     commandRecognized = true;
                     continue;
+                }
+                
+                // Handle alert commands
+                if (fullCommand.startsWith("alert")) {
+                    try {
+                        Command alertCommand = AlertParser.parse(fullCommand, fundsAlert);
+                        alertCommand.execute(expenseList, ui);
+                        commandRecognized = true;
+                        continue;
+                    } catch (BudgetTrackerException e) {
+                        ui.showMessage(e.getMessage());
+                        commandRecognized = true;
+                        continue;
+                    }
                 }
 
                 // Handle income-related commands
@@ -119,7 +167,6 @@ public class Duke {
                     }
                 }
 
-
                 // Handle unrecognized commands
                 if (!commandRecognized && !fullCommand.trim().isEmpty()) {
                     System.out.println("Oops! I don't recognize that command. Type 'help' to see available commands.");
@@ -129,10 +176,5 @@ public class Duke {
                 System.out.println(e.getMessage());
             }
         }
-    }
-
-    public static void displayWelcomeMessage() {
-        System.out.println("Welcome to Common Cents!");
-        System.out.println("Use `help` to see available commands.");
     }
 }

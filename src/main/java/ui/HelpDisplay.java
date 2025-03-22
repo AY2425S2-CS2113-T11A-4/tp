@@ -15,6 +15,7 @@ public class HelpDisplay {
     private static final String SUMMARY_HEADING = "--- Summary Management ---";
     private static final String GOALS_HEADING = "--- Savings Goals ---";
     private static final String GENERAL_HEADING = "--- General Commands ---";
+    private static final String ALERTS_HEADING = "--- Funds Alerts ---";
 
 
     private final StringBuilder helpText = new StringBuilder();
@@ -23,7 +24,9 @@ public class HelpDisplay {
      * Constructs a HelpDisplay object and builds the help text.
      */
     public HelpDisplay() {
+        assert helpText != null : "Help text StringBuilder should be initialized";
         buildHelpText();
+        assert helpText.length() > 0 : "Help text should not be empty after building";
     }
 
     /**
@@ -57,6 +60,9 @@ public class HelpDisplay {
                 , "Updates an existing savings goal.");
         addCommandHelp("savings goal delete <INDEX>", "Deletes a savings goal by index.");
         addCommandHelp("exit savings", "exited savings function");
+        
+        addCategory(ALERTS_HEADING);
+        addCommandHelp("alert set <AMOUNT>", "Sets the warning threshold for low available funds.");
 
         addCategory(GENERAL_HEADING);
         addCommandHelp("help", "Displays this help message.");
@@ -70,6 +76,10 @@ public class HelpDisplay {
      * @param heading The heading text.
      */
     private void addCategory(String heading) {
+        if (heading == null || heading.trim().isEmpty()) {
+            throw new IllegalArgumentException("Category heading cannot be null or empty");
+            
+        }
         helpText.append("\n").append(heading).append("\n");
     }
 
@@ -80,6 +90,13 @@ public class HelpDisplay {
      * @param description A brief description of the command.
      */
     private void addCommandHelp(String command, String description) {
+        if (command == null || command.trim().isEmpty()) {
+            throw new IllegalArgumentException("Command cannot be null or empty");
+        }
+        if (description == null || description.trim().isEmpty()) {
+            throw new IllegalArgumentException("Description cannot be null or empty");
+        }
+
         helpText.append(String.format("%-60s %s\n", command, description));
     }
 
@@ -95,7 +112,7 @@ public class HelpDisplay {
     /**
      * Displays the help text to the console.
      */
-    public void displayHelp() {
+    public void display() {
         System.out.println(helpText);
     }
 }

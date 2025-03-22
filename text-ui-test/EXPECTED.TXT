@@ -1,5 +1,7 @@
 Welcome to Common Cents!
 Use `help` to see available commands.
+Funds Alert feature is active. You will be warned when available funds fall below $5.00.
+Use 'alert set <amount>' to change this threshold.
 ===== Budget Tracker Help =====
 
 --- Income Management ---
@@ -26,6 +28,9 @@ savings goal view                                            Views all current s
 savings goal update <INDEX> / <AMOUNT> / <DESCRIPTION>       Updates an existing savings goal.
 savings goal delete <INDEX>                                  Deletes a savings goal by index.
 exit savings                                                 exited savings function
+
+--- Funds Alerts ---
+alert set <AMOUNT>                                           Sets the warning threshold for low available funds.
 
 --- General Commands ---
 help                                                         Displays this help message.
@@ -59,21 +64,31 @@ Here are the savings in your list:
 1. 	[ ] 150.0
 2. 	[ ] 100.0
 You have 2 saving(s) in total.
-Error: Error deleting income: Cannot remove this income as it would result in a negative balance. Please reduce your expenses or savings first.
+
+====== ALERT ======
+WARNING: Available funds ($-45.50) are below warning threshold ($5.00)
+===================
+
+Deleted income entry at index 1
 ===== BUDGET SUMMARY =====
-Total Income:        $1200.50
+Total Income:        $200.50
 Total Expenses:      $246.00
-Available Balance:   $954.50
+Available Balance:   $-45.50
 Total Savings:       $250.00
 ===========================
+
+====== ALERT ======
+WARNING: Available funds ($4.50) are below warning threshold ($5.00)
+===================
+
 Deleted expense number 2.
 Your Expenses:
 1. Amount: $120.75 | Source: groceries
 2. Amount: $75.25 | Source: dinner
 ===== BUDGET SUMMARY =====
-Total Income:        $1200.50
+Total Income:        $200.50
 Total Expenses:      $196.00
-Available Balance:   $1004.50
+Available Balance:   $4.50
 Total Savings:       $250.00
 ===========================
 Exiting the application. Goodbye!

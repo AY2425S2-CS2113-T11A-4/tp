@@ -1,15 +1,19 @@
 package summary;
 
 import exceptions.BudgetTrackerException;
+import alerts.FinancialObserver;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
- * Represents a financial summary, storing total income, expenses, balance, and savings.
+ * Represents a financial summary, storing total income, expenses, and savings.
  * Provides methods for adding and removing income, expenses, and savings.
  */
 public class Summary {
     private double totalIncome;
     private double totalExpense;
     private double totalSavings;
+    private List<FinancialObserver> observers = new ArrayList<>();
 
     /**
      * Constructs a new Summary object with all values initialized to 0.
@@ -23,6 +27,34 @@ public class Summary {
         assert totalIncome == 0 : "Initial income should be 0";
         assert totalExpense == 0 : "Initial expense should be 0";
         assert totalSavings == 0 : "Initial savings should be 0";
+    }
+
+    /**
+     * Registers an observer to be notified of financial changes.
+     * 
+     * @param observer The observer to register
+     */
+    public void registerObserver(FinancialObserver observer) {
+        observers.add(observer);
+    }
+
+    /**
+     * Removes an observer from notification list.
+     * 
+     * @param observer The observer to remove
+     */
+    public void removeObserver(FinancialObserver observer) {
+        observers.remove(observer);
+    }
+
+    /**
+     * Notifies all registered observers about changes in financial data.
+     */
+    private void notifyObservers() {
+        double availableFunds = getAvailableFunds();
+        for (FinancialObserver observer : observers) {
+            observer.update(availableFunds, totalIncome, totalExpense, totalSavings);
+        }
     }
 
     /**
@@ -56,16 +88,6 @@ public class Summary {
     }
 
     /**
-     * Gets the total balance (calculated as income - expenses - savings).
-     * This represents the amount left after setting aside savings.
-     *
-     * @return The total balance.
-     */
-    public double getTotalBalance() {
-        return getAvailableFunds() - totalSavings;
-    }
-
-    /**
      * Gets the total savings.
      *
      * @return The total savings.
@@ -83,46 +105,39 @@ public class Summary {
      * @throws BudgetTrackerException If the income is negative.
      */
     public void addIncome(double income) throws BudgetTrackerException {
-        if (income < 0) {
-            throw new BudgetTrackerException("Income cannot be negative.");
+        if (income <= 0) {
+            throw new BudgetTrackerException("Income must be positive.");
         }
         double oldIncome = this.totalIncome;
         this.totalIncome += income;
         
         // Assertion to verify income was added correctly
         assert this.totalIncome == oldIncome + income : "Income was not added correctly";
+        
+        notifyObservers();
     }
 
     /**
      * Removes income from the total income.
      *
      * @param income The amount of income to remove.
-     * @throws BudgetTrackerException If the income is negative or greater than the current total income,
-     *     or if removing it would result in a negative balance.
+     * @throws BudgetTrackerException If the income is negative or greater than the current total income.
      */
     public void removeIncome(double income) throws BudgetTrackerException {
         if (income < 0) {
-            throw new BudgetTrackerException("Income cannot be negative.");
+            throw new BudgetTrackerException("Income must be positive.");
         }
         if (income > this.totalIncome) {
             throw new BudgetTrackerException("Cannot remove more income than the current total income.");
         }
-        
-        // Check if removing income would result in a negative balance
-        double potentialNewTotalIncome = this.totalIncome - income;
-        double potentialNewBalance = potentialNewTotalIncome - this.totalExpense - this.totalSavings;
-        
-        if (potentialNewBalance < 0) {
-            throw new BudgetTrackerException("Cannot remove this income as it would result in a negative balance. "
-                    + "Please reduce your expenses or savings first.");
-        }
-        
         double oldIncome = this.totalIncome;
         this.totalIncome -= income;
         
         // Assertion to verify income was removed correctly
         assert this.totalIncome == oldIncome - income : "Income was not removed correctly";
         assert this.totalIncome >= 0 : "Total income should never be negative after removal";
+        
+        notifyObservers();
     }
 
     /**
@@ -132,12 +147,12 @@ public class Summary {
      * @throws BudgetTrackerException If the expense is negative or would result in a negative balance.
      */
     public void addExpense(double expense) throws BudgetTrackerException {
-        if (expense < 0) {
-            throw new BudgetTrackerException("Expense cannot be negative.");
+        if (expense <= 0) {
+            throw new BudgetTrackerException("Expense must be positive.");
         }
         
         // Check if adding this expense would result in a negative balance
-        double availableBalance = getTotalBalance();
+        double availableBalance = getAvailableFunds();
         if (expense > availableBalance) {
             throw new BudgetTrackerException("Cannot add this expense as it would exceed your available funds. "
                     + "Available balance: " + availableBalance);
@@ -148,6 +163,8 @@ public class Summary {
         
         // Assertion to verify expense was added correctly
         assert this.totalExpense == oldExpense + expense : "Expense was not added correctly";
+        
+        notifyObservers();
     }
 
     /**
@@ -157,8 +174,8 @@ public class Summary {
      * @throws BudgetTrackerException If the expense is negative or greater than the current total expenses.
      */
     public void removeExpense(double expense) throws BudgetTrackerException {
-        if (expense < 0) {
-            throw new BudgetTrackerException("Expense cannot be negative.");
+        if (expense <= 0) {
+            throw new BudgetTrackerException("Expense must be positive.");
         }
         if (expense > this.totalExpense) {
             throw new BudgetTrackerException("Cannot remove more expense than the current total expenses.");
@@ -169,6 +186,8 @@ public class Summary {
         // Assertion to verify expense was removed correctly
         assert this.totalExpense == oldExpense - expense : "Expense was not removed correctly";
         assert this.totalExpense >= 0 : "Total expense should never be negative after removal";
+        
+        notifyObservers();
     }
 
     /**
@@ -178,11 +197,10 @@ public class Summary {
      * @throws BudgetTrackerException If the savings are negative or greater than available funds.
      */
     public void addSavings(double savings) throws BudgetTrackerException {
-        if (savings < 0) {
-            throw new BudgetTrackerException("Savings cannot be negative.");
+        if (savings <= 0) {
+            throw new BudgetTrackerException("Savings must be positive.");
         }
-        
-        // Get available funds
+
         double availableFunds = getAvailableFunds();
         
         if (savings > availableFunds) {
@@ -193,6 +211,8 @@ public class Summary {
         
         // Assertion to verify savings was added correctly
         assert this.totalSavings == oldSavings + savings : "Savings was not added correctly";
+        
+        notifyObservers();
     }
 
     /**
@@ -202,8 +222,8 @@ public class Summary {
      * @throws BudgetTrackerException If the savings are negative or greater than the current total savings.
      */
     public void removeSavings(double savings) throws BudgetTrackerException {
-        if (savings < 0) {
-            throw new BudgetTrackerException("Savings cannot be negative.");
+        if (savings <= 0) {
+            throw new BudgetTrackerException("Savings must be positive.");
         }
         if (savings > this.totalSavings) {
             throw new BudgetTrackerException("Cannot remove more savings than the current total savings.");
@@ -214,5 +234,7 @@ public class Summary {
         // Assertion to verify savings was removed correctly
         assert this.totalSavings == oldSavings - savings : "Savings was not removed correctly";
         assert this.totalSavings >= 0 : "Total savings should never be negative after removal";
+        
+        notifyObservers();
     }
 }
